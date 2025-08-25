@@ -1,6 +1,6 @@
 
-# --- Hasil Statistik Simulasi Monte Carlo ---
-# File ini dihasilkan secara otomatis.
+# --- Monte Carlo Simulation Statistical Results ---
+# This file is generated automatically.
 
 TRIALS = 10000
 TARGET_PRICE_MEAN = 10411.016029191986

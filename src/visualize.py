@@ -5,7 +5,7 @@ import seaborn as sns
 import os 
 
 CSV_FILE_PATH = '../data/monte_carlo_sotp_results.csv'
-STATS_OUTPUT_PATH = '../data/monte_carlo_statistics.py'
+STATS_OUTPUT_PATH = '../data/monte_carlo_statistics.csv'
 VISUALIZATION_OUTPUT_PATH = '../data/sotp_monte_carlo_visualization.png'
 
 CURRENT_PRICE = 7700
@@ -15,8 +15,10 @@ try:
     df = pd.read_csv(CSV_FILE_PATH)
     results_series = df['Projected_Share_Price_INDF']
     
+    # Filter out negative values
     results_series = results_series[results_series > 0]
 
+    # Calculate statistics
     trials = len(results_series)
     target_price_mean = results_series.mean()
     percentile_25 = results_series.quantile(0.25)
@@ -48,16 +50,17 @@ try:
     }
     stats_df = pd.DataFrame(stats_data)
 
-    print("--- Analisis Statistik Hasil Simulasi Monte Carlo ---")
+    print("--- Monte Carlo Simulation Statistical Analysis ---")
     print(stats_df.to_string(index=False))
 
+    # Create output directory if it doesn't exist
     output_dir = os.path.dirname(STATS_OUTPUT_PATH)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
         
     stats_py_content = f"""
-# --- Hasil Statistik Simulasi Monte Carlo ---
-# File ini dihasilkan secara otomatis.
+# --- Monte Carlo Simulation Statistical Results ---
+# This file is generated automatically.
 
 TRIALS = {trials}
 TARGET_PRICE_MEAN = {target_price_mean}
@@ -76,43 +79,82 @@ PERCENT_BULL_SCENARIO = {percent_bull_scenario}
     with open(STATS_OUTPUT_PATH, 'w') as f:
         f.write(stats_py_content)
         
-    print(f"\nHasil statistik telah disimpan di '{STATS_OUTPUT_PATH}'")
+    print(f"\nStatistical results have been saved to '{STATS_OUTPUT_PATH}'")
 
 
-    plt.style.use('seaborn-v0_8-whitegrid')
-    fig, ax = plt.subplots(figsize=(14, 8))
+    # Create simple visualization with white background
+    plt.style.use('default')
+    fig, ax = plt.subplots(figsize=(12, 8))
     
-    counts, bins, patches = ax.hist(results_series, bins=75, alpha=0.1, color='#04549b')
+    # Set clean white background
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
+    
+    # Calculate histogram
+    counts, bins, patches = ax.hist(results_series, bins=75, alpha=0.1, color='#105c9c')
     ax.clear()
     
+    # Create histogram with color coding
     bin_centers = (bins[:-1] + bins[1:]) / 2
-    for i in range(len(bin_centers)):
-        bar_color = '#fe5a5b'
-        if bin_centers[i] > BULL_SCENARIO_THRESHOLD:
-            bar_color = '#ffc107'
-        elif bin_centers[i] > CURRENT_PRICE:
-            bar_color = '#04549b'
-        ax.bar(bin_centers[i], counts[i], width=(bins[i+1]-bins[i])*0.9, color=bar_color, alpha=0.8)
-
-    sns.kdeplot(results_series, ax=ax, color='black', linewidth=1.5)
-
-    ax.axvline(target_price_mean, color='black', linestyle='--', linewidth=2, label=f'Target Harga Rata-Rata: Rp {target_price_mean:,.0f}')
-    ax.axvline(CURRENT_PRICE, color='red', linestyle='-', linewidth=2, label=f'Harga Saat Ini: Rp {CURRENT_PRICE:,.0f}')
-
-    ax.set_title('Distribusi Probabilitas Valuasi SOTP INDF (Monte Carlo Simulation)', fontsize=18, fontweight='bold')
-    ax.set_xlabel('Target Harga per Saham (Rp)', fontsize=12)
-    ax.set_ylabel('Frekuensi', fontsize=12)
-    ax.legend()
+    bin_width = bins[1] - bins[0]
     
-    ax.get_xaxis().set_major_formatter(plt.FuncFormatter(lambda x, p: format(int(x), ',')))
-    plt.xticks(rotation=45)
+    for i in range(len(bin_centers)):
+        bar_color = '#fe5a5b'  # Red for below current price
+        if bin_centers[i] > BULL_SCENARIO_THRESHOLD:
+            bar_color = '#ffc107'  # Yellow for bull scenario
+        elif bin_centers[i] > CURRENT_PRICE:
+            bar_color = '#105c9c'  # New blue for above current price
+        
+        ax.bar(bin_centers[i], counts[i], width=bin_width*0.9, 
+               color=bar_color, alpha=0.8)
+
+    # Remove vertical lines (mean target, current price, median)
+    # Keeping only the histogram bars for cleaner look
+    
+    # Remove title on x and y axis (no set_xlabel and set_ylabel)
+    
+    # Format X axis with thousand separators and horizontal rotation
+    def format_rupiah(x, p):
+        return f'Rp {int(x):,}'
+    
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(format_rupiah))
+    
+    # Remove grid
+    ax.grid(False)
+    
+    # Add simplified summary statistics in top right with requested metrics
+    stats_text = f'''Statistics Summary:
+Target Price Mean: Rp {target_price_mean:,.0f}
+Mean Upside: {mean_upside_percent:.1f}%
+10% Upside: {percent_above_10_upside:.1f}%
+Bull Scenario: {percent_bull_scenario:.1f}%'''
+    
+    # Position text box for key statistics in top right
+    ax.text(0.98, 0.98, stats_text, transform=ax.transAxes, 
+            verticalalignment='top', horizontalalignment='right',
+            bbox=dict(boxstyle='round,pad=0.5', facecolor='white', alpha=0.9, 
+                     edgecolor='black', linewidth=1),
+            fontsize=9, fontweight='normal', color='black')
+    
+    # Style ticks - horizontal price labels (rotation=0)
+    ax.tick_params(axis='both', which='major', labelsize=10, colors='black')
+    ax.tick_params(axis='x', rotation=0)  # Horizontal
+    
+    # Simple black border - remove top and right axis lines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_edgecolor('black')
+    ax.spines['left'].set_linewidth(1)
+    ax.spines['bottom'].set_edgecolor('black')
+    ax.spines['bottom'].set_linewidth(1)
     
     plt.tight_layout()
-    plt.savefig(VISUALIZATION_OUTPUT_PATH)
+    plt.savefig(VISUALIZATION_OUTPUT_PATH, dpi=300, bbox_inches='tight', 
+                facecolor='white', edgecolor='none')
     
-    print(f"\nVisualisasi telah disimpan sebagai '{VISUALIZATION_OUTPUT_PATH}'")
+    print(f"\nSimple visualization has been saved as '{VISUALIZATION_OUTPUT_PATH}'")
 
 except FileNotFoundError:
-    print(f"ERROR: File '{CSV_FILE_PATH}' tidak ditemukan. Pastikan file tersebut berada di direktori yang benar.")
+    print(f"ERROR: File '{CSV_FILE_PATH}' not found. Please ensure the file is in the correct directory.")
 except Exception as e:
-    print(f"Terjadi error: {e}")
+    print(f"An error occurred: {e}")
