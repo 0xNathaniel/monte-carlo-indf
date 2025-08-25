@@ -2,29 +2,21 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import os # <-- Tambahkan library os untuk mengelola direktori
+import os 
 
-# --------------------------------------------------------------------------
-# 1. DEFINISIKAN PARAMETER UTAMA
-# --------------------------------------------------------------------------
 CSV_FILE_PATH = '../data/monte_carlo_sotp_results.csv'
-STATS_OUTPUT_PATH = '../data/monte_carlo_statistics.py' # <-- Path file output statistik
-VISUALIZATION_OUTPUT_PATH = '../data/sotp_monte_carlo_visualization.png' # <-- Path file output visualisasi
+STATS_OUTPUT_PATH = '../data/monte_carlo_statistics.py'
+VISUALIZATION_OUTPUT_PATH = '../data/sotp_monte_carlo_visualization.png'
 
 CURRENT_PRICE = 7700
 BULL_SCENARIO_THRESHOLD = 11500
 
 try:
-    # Baca file hasil simulasi
     df = pd.read_csv(CSV_FILE_PATH)
     results_series = df['Projected_Share_Price_INDF']
     
-    # Hapus nilai-nilai ekstrem atau tidak valid (misalnya, negatif)
     results_series = results_series[results_series > 0]
 
-    # --------------------------------------------------------------------------
-    # 3. HITUNG STATISTIK LENGKAP
-    # --------------------------------------------------------------------------
     trials = len(results_series)
     target_price_mean = results_series.mean()
     percentile_25 = results_series.quantile(0.25)
@@ -40,7 +32,6 @@ try:
     percent_above_10_upside = (results_series > (CURRENT_PRICE * 1.10)).mean() * 100
     percent_bull_scenario = (results_series > BULL_SCENARIO_THRESHOLD).mean() * 100
 
-    # Siapkan data untuk ditampilkan di console
     stats_data = {
         "Statistic": [
             "Trials", "Target Price (Mean)", "Mean upside%", "25th percentile", 
@@ -60,16 +51,10 @@ try:
     print("--- Analisis Statistik Hasil Simulasi Monte Carlo ---")
     print(stats_df.to_string(index=False))
 
-    # --------------------------------------------------------------------------
-    # >>>>> BLOK KODE BARU UNTUK MENYIMPAN STATISTIK <<<<<
-    # --------------------------------------------------------------------------
-    
-    # Pastikan direktori ../data ada
     output_dir = os.path.dirname(STATS_OUTPUT_PATH)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
         
-    # Siapkan konten yang akan ditulis ke file .py
     stats_py_content = f"""
 # --- Hasil Statistik Simulasi Monte Carlo ---
 # File ini dihasilkan secara otomatis.
@@ -88,21 +73,17 @@ PERCENT_ABOVE_10_UPSIDE = {percent_above_10_upside}
 PERCENT_BULL_SCENARIO = {percent_bull_scenario}
 """
     
-    # Tulis string ke dalam file .py
     with open(STATS_OUTPUT_PATH, 'w') as f:
         f.write(stats_py_content)
         
     print(f"\nHasil statistik telah disimpan di '{STATS_OUTPUT_PATH}'")
 
-    # --------------------------------------------------------------------------
-    # 4. BUAT VISUALISASI HISTOGRAM
-    # --------------------------------------------------------------------------
+
     plt.style.use('seaborn-v0_8-whitegrid')
     fig, ax = plt.subplots(figsize=(14, 8))
     
-    # Buat histogram dan warnai barnya
     counts, bins, patches = ax.hist(results_series, bins=75, alpha=0.1, color='#04549b')
-    ax.clear() # Hapus histogram awal agar bisa digambar ulang dengan warna
+    ax.clear()
     
     bin_centers = (bins[:-1] + bins[1:]) / 2
     for i in range(len(bin_centers)):
@@ -113,14 +94,11 @@ PERCENT_BULL_SCENARIO = {percent_bull_scenario}
             bar_color = '#04549b'
         ax.bar(bin_centers[i], counts[i], width=(bins[i+1]-bins[i])*0.9, color=bar_color, alpha=0.8)
 
-    # Tambahkan kembali KDE plot
     sns.kdeplot(results_series, ax=ax, color='black', linewidth=1.5)
 
-    # Tambahkan garis vertikal untuk statistik penting
     ax.axvline(target_price_mean, color='black', linestyle='--', linewidth=2, label=f'Target Harga Rata-Rata: Rp {target_price_mean:,.0f}')
     ax.axvline(CURRENT_PRICE, color='red', linestyle='-', linewidth=2, label=f'Harga Saat Ini: Rp {CURRENT_PRICE:,.0f}')
 
-    # Kustomisasi Plot
     ax.set_title('Distribusi Probabilitas Valuasi SOTP INDF (Monte Carlo Simulation)', fontsize=18, fontweight='bold')
     ax.set_xlabel('Target Harga per Saham (Rp)', fontsize=12)
     ax.set_ylabel('Frekuensi', fontsize=12)

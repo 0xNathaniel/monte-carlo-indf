@@ -14,22 +14,23 @@ BOGASARI_EBIT           = 2567040   # 2024 EBIT
 DISTRIBUTION_EBIT       = 490000    # 2024 EBIT 
 AGRIBUSINESS_EV         = 11107642  # 2024 Total Weighted EV
 
+""" DCF Random Variables (Normal Distribution) """
+WACC_MEAN               = 0.1014
+WACC_STD_DEV            = 0.005
 
+G_MEAN                  = 0.03
+G_STD_DEV               = 0.005
 
-""" DCF Random Variables """
-WACC_LIST               = [0.0914, 0.0964, 0.1014, 0.1064, 0.1114]
-G_LIST                  = [0.02, 0.025, 0.03, 0.035, 0.04]
+""" Bogasari Multiple Random Variables (Normal Distribution) """
+BOGASARI_EV_EBIT_MEAN   = 8.045
+BOGASARI_EV_EBIT_STD_DEV= 0.5
 
-""" Bogasari Multiple Random Variables """
-BOGASARI_EV_EBIT        = [7.045, 7.545, 8.045, 8.545, 9.045]
+""" Distribution Multiple Random Variables (Normal Distribution) """
+DISTRIBUTION_EV_EBIT_MEAN   = 8.96
+DISTRIBUTION_EV_EBIT_STD_DEV= 0.5
 
-""" Distribution Multiple Random Variables """
-DISTRIBUTION_EV_EBIT    = [7.96, 8.46, 8.96, 9.46, 9.96]
+""" SOTP Random Variables (Normal Distribution) """
+HOLDING_DISCOUNT_MEAN     = 0.5
+HOLDING_DISCOUNT_STD_DEV  = 0.025
 
-WEIGHTS                 = [0.10, 0.20, 0.40, 0.20, 0.10]
-
-""" SOTP Random Variables """
-HOLDING_DISCOUNT        = [0.55, 0.5, 0.45]
-HOLDING_DISCOUNT_WEIGHT = [0.3, 0.4, 0.3]
-
-SHARES_OUTSTANDING      = 8780  # INDF Shares Oustanding
+SHARES_OUTSTANDING      = 8780  # INDF Shares Outstanding (disesuaikan)
